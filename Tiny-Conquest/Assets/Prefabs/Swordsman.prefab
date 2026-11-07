@@ -164,3 +164,4 @@ MonoBehaviour:
   detectionRadius: 4
   waypointTolerance: 0.4
   waypoints: []
+  unitRenderer: {fileID: 9187378693697985488}

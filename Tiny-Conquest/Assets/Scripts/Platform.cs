@@ -263,4 +263,15 @@ public class Platform : MonoBehaviour
                 stationedTroops.Count + "/" + maxTroops;
         }
     }
+
+    public void ReceiveTroop(SwordsmanController troop)
+    {
+        if (troop == null || stationedTroops.Contains(troop))
+        {
+            return;
+        }
+
+        stationedTroops.Add(troop);
+        UpdateTroopCounter();
+    }
 }

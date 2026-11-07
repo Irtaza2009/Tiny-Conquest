@@ -20,6 +20,9 @@ public class SwordsmanController : MonoBehaviour
     [SerializeField] private float waypointTolerance = 0.15f;
     [SerializeField] private Transform[] waypoints;
 
+    [Header("Visuals")]
+    [SerializeField] private Renderer unitRenderer;
+
     private float currentHealth;
     private float attackTimer;
 
@@ -36,6 +39,12 @@ public class SwordsmanController : MonoBehaviour
     public float CurrentHealth => currentHealth;
     public bool IsDead => isDead;
 
+    private readonly Color neutralColor = Color.grey;
+    private readonly Color playerColor = new Color(0.44f, 0.76f, 0.9f);
+    private readonly Color aiColor = new Color(1f, 0.51f, 0.51f);
+
+    private Platform destinationPlatform;
+
     private void Awake()
     {
         currentHealth = maxHealth;
@@ -48,6 +57,11 @@ public class SwordsmanController : MonoBehaviour
             RigidbodyConstraints.FreezeRotationZ;
 
         isMoving = waypoints != null && waypoints.Length > 0;
+    }
+
+    private void Start()
+    {
+        UpdateVisuals();
     }
 
     public void SetTeam(int newTeamID)
@@ -82,10 +96,11 @@ public class SwordsmanController : MonoBehaviour
         }
     }
 
-    public void SetRoute(Transform[] newWaypoints)
+    public void SetRoute(Transform[] newWaypoints, Platform destination)
     {
         waypoints = newWaypoints;
         currentWaypointIndex = 0;
+        destinationPlatform = destination;
 
         isMoving = waypoints != null && waypoints.Length > 0;
         currentTarget = null;
@@ -182,7 +197,7 @@ public class SwordsmanController : MonoBehaviour
         if (waypoints == null ||
             currentWaypointIndex >= waypoints.Length)
         {
-            isMoving = false;
+            FinishRoute();
             return;
         }
 
@@ -212,7 +227,7 @@ public class SwordsmanController : MonoBehaviour
         float movement = moveSpeed * Time.fixedDeltaTime;
 
         Vector3 nextPosition = unitRigidbody.position +
-                               direction * Mathf.Min(movement, distance);
+                            direction * Mathf.Min(movement, distance);
 
         unitRigidbody.MovePosition(nextPosition);
 
@@ -223,6 +238,17 @@ public class SwordsmanController : MonoBehaviour
                 10f * Time.fixedDeltaTime
             )
         );
+    }
+
+    private void FinishRoute()
+    {
+        isMoving = false;
+
+        if (destinationPlatform != null)
+        {
+            destinationPlatform.ReceiveTroop(this);
+            destinationPlatform = null;
+        }
     }
 
     private void Attack()
@@ -257,5 +283,25 @@ public class SwordsmanController : MonoBehaviour
 
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
+    }
+
+    private void UpdateVisuals()
+    {
+        Color ownerColor = neutralColor;
+
+        switch (teamID)
+        {
+            case 1:
+                ownerColor = playerColor;
+                break;
+
+            case 2:
+                ownerColor = aiColor;
+                break;
+        }
+
+        if (unitRenderer != null)
+            unitRenderer.material.color = ownerColor;
+        
     }
 }
