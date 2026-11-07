@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public class SwordsmanController : MonoBehaviour
 {
     [Header("Team")]
@@ -14,10 +15,9 @@ public class SwordsmanController : MonoBehaviour
 
     [Header("Enemy Detection")]
     [SerializeField] private float detectionRadius = 4f;
-    [SerializeField] private LayerMask enemyLayer;
 
     [Header("Movement")]
-    [SerializeField] private float waypointTolerance = 0.3f;
+    [SerializeField] private float waypointTolerance = 0.15f;
     [SerializeField] private Transform[] waypoints;
 
     private float currentHealth;
@@ -30,6 +30,8 @@ public class SwordsmanController : MonoBehaviour
     private bool isMoving;
     private bool isDead;
 
+    private Rigidbody unitRigidbody;
+
     public int TeamID => teamID;
     public float CurrentHealth => currentHealth;
     public bool IsDead => isDead;
@@ -38,7 +40,19 @@ public class SwordsmanController : MonoBehaviour
     {
         currentHealth = maxHealth;
 
+        unitRigidbody = GetComponent<Rigidbody>();
+
+        unitRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+        unitRigidbody.constraints =
+            RigidbodyConstraints.FreezeRotationX |
+            RigidbodyConstraints.FreezeRotationZ;
+
         isMoving = waypoints != null && waypoints.Length > 0;
+    }
+
+    public void SetTeam(int newTeamID)
+    {
+        teamID = newTeamID;
     }
 
     private void Update()
@@ -47,14 +61,16 @@ public class SwordsmanController : MonoBehaviour
             return;
 
         if (currentTarget != null && currentTarget.IsDead)
-        {
             currentTarget = null;
-        }
 
         if (currentTarget == null)
-        {
             FindEnemy();
-        }
+    }
+
+    private void FixedUpdate()
+    {
+        if (isDead || unitRigidbody == null)
+            return;
 
         if (currentTarget != null)
         {
@@ -70,9 +86,95 @@ public class SwordsmanController : MonoBehaviour
     {
         waypoints = newWaypoints;
         currentWaypointIndex = 0;
-        isMoving = waypoints != null && waypoints.Length > 0;
 
+        isMoving = waypoints != null && waypoints.Length > 0;
         currentTarget = null;
+    }
+
+    private void FindEnemy()
+    {
+        Collider[] nearbyObjects = Physics.OverlapSphere(
+            transform.position,
+            detectionRadius,
+            ~0,
+            QueryTriggerInteraction.Ignore
+        );
+
+        float closestDistance = Mathf.Infinity;
+
+        foreach (Collider col in nearbyObjects)
+        {
+            SwordsmanController enemy =
+                col.GetComponentInParent<SwordsmanController>();
+
+            if (enemy == null ||
+                enemy == this ||
+                enemy.IsDead ||
+                enemy.TeamID == teamID)
+            {
+                continue;
+            }
+
+            float distance = Vector3.Distance(
+                transform.position,
+                enemy.transform.position
+            );
+
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                currentTarget = enemy;
+            }
+        }
+    }
+
+    private void HandleCombat()
+    {
+        if (currentTarget == null || currentTarget.IsDead)
+        {
+            currentTarget = null;
+            return;
+        }
+
+        Vector3 direction =
+            currentTarget.transform.position - unitRigidbody.position;
+
+        direction.y = 0f;
+
+        float distance = direction.magnitude;
+
+        if (distance > 0.01f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+            unitRigidbody.MoveRotation(
+                Quaternion.Slerp(
+                    unitRigidbody.rotation,
+                    targetRotation,
+                    10f * Time.fixedDeltaTime
+                )
+            );
+        }
+
+        if (distance > attackRange)
+        {
+            Vector3 movement =
+                direction.normalized * moveSpeed * Time.fixedDeltaTime;
+
+            unitRigidbody.MovePosition(
+                unitRigidbody.position + movement
+            );
+        }
+        else
+        {
+            attackTimer -= Time.fixedDeltaTime;
+
+            if (attackTimer <= 0f)
+            {
+                Attack();
+                attackTimer = attackCooldown;
+            }
+        }
     }
 
     private void FollowWaypoints()
@@ -92,7 +194,9 @@ public class SwordsmanController : MonoBehaviour
             return;
         }
 
-        Vector3 direction = waypoint.position - transform.position;
+        Vector3 direction =
+            waypoint.position - unitRigidbody.position;
+
         direction.y = 0f;
 
         float distance = direction.magnitude;
@@ -105,101 +209,20 @@ public class SwordsmanController : MonoBehaviour
 
         direction.Normalize();
 
-        float movementThisFrame = moveSpeed * Time.deltaTime;
+        float movement = moveSpeed * Time.fixedDeltaTime;
 
-        if (movementThisFrame >= distance)
-        {
-            transform.position = new Vector3(
-                waypoint.position.x,
-                transform.position.y,
-                waypoint.position.z
-            );
-            currentWaypointIndex++;
-            return;
-        }
+        Vector3 nextPosition = unitRigidbody.position +
+                               direction * Mathf.Min(movement, distance);
 
-        transform.position += direction * movementThisFrame;
+        unitRigidbody.MovePosition(nextPosition);
 
-        if (direction != Vector3.zero)
-        {
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
+        unitRigidbody.MoveRotation(
+            Quaternion.Slerp(
+                unitRigidbody.rotation,
                 Quaternion.LookRotation(direction),
-                10f * Time.deltaTime
-            );
-        }
-    }
-
-    private void FindEnemy()
-    {
-        Collider[] nearbyObjects = Physics.OverlapSphere(
-            transform.position,
-            detectionRadius,
-            enemyLayer
+                10f * Time.fixedDeltaTime
+            )
         );
-
-        float closestDistance = Mathf.Infinity;
-
-        foreach (Collider col in nearbyObjects)
-        {
-            SwordsmanController enemy =
-                col.GetComponentInParent<SwordsmanController>();
-
-            if (enemy == null ||
-                enemy == this ||
-                enemy.IsDead ||
-                enemy.TeamID == teamID)
-                continue;
-
-            float distance = Vector3.Distance(
-                transform.position,
-                enemy.transform.position
-            );
-
-            if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                currentTarget = enemy;
-            }
-        }
-    }
-
-    private void HandleCombat()
-    {
-        float distance = Vector3.Distance(
-            transform.position,
-            currentTarget.transform.position
-        );
-
-        Vector3 direction =
-            currentTarget.transform.position - transform.position;
-
-        direction.y = 0f;
-
-        if (direction.sqrMagnitude > 0.001f)
-        {
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                Quaternion.LookRotation(direction),
-                10f * Time.deltaTime
-            );
-        }
-
-        if (distance > attackRange)
-        {
-            transform.position +=
-                direction.normalized * moveSpeed * Time.deltaTime;
-        }
-        else
-        {
-            attackTimer -= Time.deltaTime;
-
-            if (attackTimer <= 0f)
-            {
-                Attack();
-                attackTimer = attackCooldown;
-            }
-        }
     }
 
     private void Attack()
@@ -218,9 +241,7 @@ public class SwordsmanController : MonoBehaviour
         currentHealth -= amount;
 
         if (currentHealth <= 0f)
-        {
             Die();
-        }
     }
 
     private void Die()
