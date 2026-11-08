@@ -40,7 +40,10 @@ public class PlatformInput : MonoBehaviour
         if (selectedPlatform == null)
         {
             if (clickedPlatform.Owner == PlatformOwner.Player)
+            {
                 selectedPlatform = clickedPlatform;
+                selectedPlatform.isSelected = true;
+            }
 
             return;
         }
@@ -48,6 +51,7 @@ public class PlatformInput : MonoBehaviour
         // Click selected platform to deselect it.
         if (clickedPlatform == selectedPlatform)
         {
+            selectedPlatform.isSelected = false;
             selectedPlatform = null;
             return;
         }
@@ -55,7 +59,9 @@ public class PlatformInput : MonoBehaviour
         // Click another player platform to change selection.
         if (clickedPlatform.Owner == PlatformOwner.Player)
         {
+            selectedPlatform.isSelected = false;
             selectedPlatform = clickedPlatform;
+            selectedPlatform.isSelected = true;
             return;
         }
 
@@ -65,6 +71,7 @@ public class PlatformInput : MonoBehaviour
             ArmyManager.Instance.SendTroops(selectedPlatform, clickedPlatform, selectedPlatform.TroopCount);
         }
 
+        selectedPlatform.isSelected = false;
         selectedPlatform = null;
     }
 }

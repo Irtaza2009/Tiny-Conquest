@@ -781,6 +781,7 @@ GameObject:
   - component: {fileID: 604690668}
   - component: {fileID: 604690667}
   - component: {fileID: 604690666}
+  - component: {fileID: 604690670}
   m_Layer: 0
   m_Name: Path (1)
   m_TagString: Untagged
@@ -883,6 +884,23 @@ Transform:
   - {fileID: 566386990}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 54, z: 0}
+--- !u!114 &604690670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 604690665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ecf7e896a4cb6d40b4e77a524d41a87, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PathConnection
+  platformA: {fileID: 1622225184}
+  platformB: {fileID: 1176016346}
+  waypointsFromA:
+  - {fileID: 1279601066}
+  - {fileID: 566386990}
 --- !u!1 &753704302
 GameObject:
   m_ObjectHideFlags: 0
@@ -1572,8 +1590,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 770906685}
   spawnSpacing: 1.1
   spawnHeightOffset: 0.5
-  ownershipRenderers:
-  - {fileID: 1176016348}
+  platformRenderer: {fileID: 1176016348}
   troopCountLabel: {fileID: 870608538}
   neutralLayer: NeutralUnits
   playerLayer: PlayerUnits
@@ -1809,8 +1826,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 1471942713}
   spawnSpacing: 1.1
   spawnHeightOffset: 0.5
-  ownershipRenderers:
-  - {fileID: 1622225186}
+  platformRenderer: {fileID: 1622225186}
   troopCountLabel: {fileID: 964260621}
   neutralLayer: NeutralUnits
   playerLayer: PlayerUnits
@@ -2028,8 +2044,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 357708699}
   spawnSpacing: 1.1
   spawnHeightOffset: 0.5
-  ownershipRenderers:
-  - {fileID: 1676346198}
+  platformRenderer: {fileID: 1676346198}
   troopCountLabel: {fileID: 286576506}
   neutralLayer: NeutralUnits
   playerLayer: PlayerUnits
