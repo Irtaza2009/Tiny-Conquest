@@ -67,8 +67,15 @@ public class Platform : MonoBehaviour
     {
         RemoveDeadTroops();
 
+        CheckCapture();
+
         if (owner == PlatformOwner.Neutral)
             return;
+
+        if (isContested())
+        {
+            return;
+        }
 
         if (stationedTroops.Count >= maxTroops)
         {
@@ -139,6 +146,83 @@ public class Platform : MonoBehaviour
         stationedTroops.Add(troop);
 
         UpdateTroopCounter();
+    }
+
+    private void CheckCapture()
+    {
+        bool hasPlayer = false;
+        bool hasAI = false;
+        bool hasNeutral = false;
+
+        foreach (SwordsmanController troop in stationedTroops)
+        {
+            if (troop == null || troop.IsDead)
+                continue;
+            
+            switch (troop.TeamID)
+            {
+                case 0:
+                    hasNeutral = true;
+                    break;
+                
+                case 1:
+                    hasPlayer = true;
+                    break;
+
+                case 2:
+                    hasAI = true;
+                    break;
+            }
+        }
+
+        if (hasPlayer && !hasAI && !hasNeutral)
+        {
+            SetOwner(PlatformOwner.Player);
+        }
+        else if (!hasPlayer && hasAI && !hasNeutral)
+        {
+            SetOwner(PlatformOwner.AI);
+        }
+        else if (!hasPlayer && !hasAI && hasNeutral)
+        {
+            SetOwner(PlatformOwner.Neutral);
+        }
+    }
+
+    private bool isContested()
+    {
+        bool hasPlayer = false;
+        bool hasAI = false;
+        bool hasNeutral = false;
+
+        foreach (SwordsmanController troop in stationedTroops)
+        {
+            if (troop == null || troop.IsDead)
+                continue;
+            
+            switch (troop.TeamID)
+            {
+                case 0:
+                    hasNeutral = true;
+                    break;
+                
+                case 1:
+                    hasPlayer = true;
+                    break;
+
+                case 2:
+                    hasAI = true;
+                    break;
+            }
+        }
+
+        int teamCount = 0;
+
+        if (hasPlayer) teamCount++;
+        if (hasAI) teamCount++;
+        if (hasNeutral) teamCount++;
+
+        return teamCount > 1;
     }
 
     private int GetTeamID()
