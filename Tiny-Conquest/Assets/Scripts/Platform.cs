@@ -27,8 +27,9 @@ public class Platform : MonoBehaviour
     [SerializeField] private float spawnHeightOffset = 0.5f;
 
     [Header("Visuals")]
-    [SerializeField] private Renderer[] ownershipRenderers;
+    [SerializeField] private Renderer platformRenderer;
     [SerializeField] private TMP_Text troopCountLabel;
+    public bool isSelected = false;
 
     [Header("Layers")]
     [SerializeField] private string neutralLayer = "NeutralUnits";
@@ -40,10 +41,9 @@ public class Platform : MonoBehaviour
     private float productionTimer;
 
     private readonly Color neutralColor = Color.grey;
-
     private readonly Color playerColor = new Color(0.44f, 0.76f, 0.8f);
-
     private readonly Color aiColor = new Color(0.8f, 0.51f, 0.51f);
+    private readonly Color selectedColor = new Color(0.5f, 1f, 0.5f);
 
     public PlatformOwner Owner => owner;
     public int TroopCount => stationedTroops.Count;
@@ -65,6 +65,8 @@ public class Platform : MonoBehaviour
 
     private void Update()
     {
+        UpdateVisuals();
+
         RemoveDeadTroops();
 
         CheckCapture();
@@ -332,10 +334,16 @@ public class Platform : MonoBehaviour
                 break;
         }
 
-        foreach (Renderer platformRenderer in ownershipRenderers)
+        if (platformRenderer != null)
         {
-            if (platformRenderer != null)
+            if (isSelected)
+            {
+                platformRenderer.material.color = selectedColor;
+            }
+            else
+            {
                 platformRenderer.material.color = ownerColor;
+            }
         }
     }
 

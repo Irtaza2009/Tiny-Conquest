@@ -1590,8 +1590,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 770906685}
   spawnSpacing: 1.1
   spawnHeightOffset: 0.5
-  ownershipRenderers:
-  - {fileID: 1176016348}
+  platformRenderer: {fileID: 1176016348}
   troopCountLabel: {fileID: 870608538}
   neutralLayer: NeutralUnits
   playerLayer: PlayerUnits
@@ -1827,8 +1826,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 1471942713}
   spawnSpacing: 1.1
   spawnHeightOffset: 0.5
-  ownershipRenderers:
-  - {fileID: 1622225186}
+  platformRenderer: {fileID: 1622225186}
   troopCountLabel: {fileID: 964260621}
   neutralLayer: NeutralUnits
   playerLayer: PlayerUnits
@@ -2046,8 +2044,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 357708699}
   spawnSpacing: 1.1
   spawnHeightOffset: 0.5
-  ownershipRenderers:
-  - {fileID: 1676346198}
+  platformRenderer: {fileID: 1676346198}
   troopCountLabel: {fileID: 286576506}
   neutralLayer: NeutralUnits
   playerLayer: PlayerUnits
