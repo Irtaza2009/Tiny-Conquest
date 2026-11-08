@@ -9,6 +9,16 @@ public class PathConnection : MonoBehaviour
     [Header("Waypoints")]
     [SerializeField] private Transform[] waypointsFromA;
 
+    public Platform GetOtherPlatform(Platform platform)
+    {
+        if (platform == platformA)
+            return platformB;
+        if (platform == platformB)
+            return platformA;
+
+        return null;
+    }
+
     public bool Connects(Platform a, Platform b)
     {
         return (platformA == a && platformB == b) ||

@@ -32,6 +32,11 @@ public class PlatformInput : MonoBehaviour
 
         if (clickedPlatform == null)
         {
+            if (selectedPlatform != null)
+            {
+                selectedPlatform.isSelected = false;
+            }
+            
             selectedPlatform = null;
             return;
         }
