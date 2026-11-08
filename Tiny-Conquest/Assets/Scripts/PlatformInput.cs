@@ -5,11 +5,16 @@ public class PlatformInput : MonoBehaviour
     [SerializeField] private Camera gameCamera;
 
     private Platform selectedPlatform;
+    private PathConnection[] connections;
 
     private void Start()
     {
         if (gameCamera == null)
             gameCamera = Camera.main;
+
+        connections = FindObjectsByType<PathConnection>(
+            FindObjectsSortMode.None
+        );
     }
 
     private void Update()
@@ -32,12 +37,7 @@ public class PlatformInput : MonoBehaviour
 
         if (clickedPlatform == null)
         {
-            if (selectedPlatform != null)
-            {
-                selectedPlatform.isSelected = false;
-            }
-            
-            selectedPlatform = null;
+            ClearSelection();
             return;
         }
 
@@ -46,8 +46,7 @@ public class PlatformInput : MonoBehaviour
         {
             if (clickedPlatform.Owner == PlatformOwner.Player)
             {
-                selectedPlatform = clickedPlatform;
-                selectedPlatform.isSelected = true;
+                SelectPlatform(clickedPlatform);
             }
 
             return;
@@ -56,17 +55,14 @@ public class PlatformInput : MonoBehaviour
         // Click selected platform to deselect it.
         if (clickedPlatform == selectedPlatform)
         {
-            selectedPlatform.isSelected = false;
-            selectedPlatform = null;
+            ClearSelection();
             return;
         }
 
         // Click another player platform to change selection.
         if (clickedPlatform.Owner == PlatformOwner.Player)
         {
-            selectedPlatform.isSelected = false;
-            selectedPlatform = clickedPlatform;
-            selectedPlatform.isSelected = true;
+            SelectPlatform(clickedPlatform);
             return;
         }
 
@@ -76,7 +72,59 @@ public class PlatformInput : MonoBehaviour
             ArmyManager.Instance.SendTroops(selectedPlatform, clickedPlatform, selectedPlatform.TroopCount);
         }
 
-        selectedPlatform.isSelected = false;
+        ClearSelection();
+    }
+
+    private void SelectPlatform(Platform platform)
+    {
+        ClearSelection();
+
+        selectedPlatform = platform;
+        selectedPlatform.isSelected = true;
+
+        foreach (PathConnection connection in connections)
+        {
+            if (connection == null)
+                continue;
+
+            Platform neighbour = connection.GetOtherPlatform(selectedPlatform);
+
+            if (neighbour == null ||
+                neighbour.Owner == PlatformOwner.Player)
+            {
+                continue;
+            }
+
+            Transform[] route;
+
+            if (connection.TryGetRoute(
+                selectedPlatform,
+                neighbour,
+                out route))
+            {
+                neighbour.SetAttackHighlight(true);
+            }
+        }
+    }
+
+    private void ClearSelection()
+    {
+        if (selectedPlatform != null)
+            selectedPlatform.isSelected = false;
+
+        Platform previousSelection = selectedPlatform;
+
+        foreach (PathConnection connection in connections)
+        {
+            if (connection == null)
+                continue;
+
+            Platform neighbour = connection.GetOtherPlatform(previousSelection);
+
+            if (neighbour != null)
+                neighbour.SetAttackHighlight(false);
+        }
+
         selectedPlatform = null;
     }
 }

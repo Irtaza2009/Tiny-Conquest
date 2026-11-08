@@ -27,7 +27,11 @@ public class Platform : MonoBehaviour
     [SerializeField] private float spawnHeightOffset = 0.5f;
 
     [Header("Visuals")]
-    [SerializeField] private Renderer platformRenderer;
+    [SerializeField] private GameObject neutralPlatformPrefab;
+    [SerializeField] private GameObject playerPlatformPrefab;
+    [SerializeField] private GameObject aiPlatformPrefab;
+    [SerializeField] private GameObject selectionHighlight;
+    [SerializeField] private GameObject attackHighlight;
     [SerializeField] private TMP_Text troopCountLabel;
     public bool isSelected;
 
@@ -41,19 +45,24 @@ public class Platform : MonoBehaviour
 
     private float productionTimer;
 
-    private readonly Color neutralColor = Color.grey;
-    private readonly Color playerColor = new Color(0.44f, 0.76f, 0.8f);
-    private readonly Color aiColor = new Color(0.8f, 0.51f, 0.51f);
-    private readonly Color selectedColor = new Color(0.5f, 1f, 0.5f);
+    private GameObject currentPlatformVisual;
 
     public PlatformOwner Owner => owner;
     public int TroopCount => stationedTroops.Count;
     public int MaxTroops => maxTroops;
 
+    public void SetAttackHighlight(bool enabled)
+    {
+        if (attackHighlight != null)
+            attackHighlight.SetActive(enabled);
+    }
+
     private void Start()
     {
         startingTroops = Mathf.Clamp(startingTroops, 0, maxTroops);
-        UpdateVisuals();
+        UpdatePlatformVisual();
+        UpdateSelectionHighlight();
+        SetAttackHighlight(false);
 
         for (int i = 0; i < startingTroops; i++)
             SpawnTroop();
@@ -63,7 +72,7 @@ public class Platform : MonoBehaviour
 
     private void Update()
     {
-        UpdateVisuals();
+        UpdateSelectionHighlight();
         RemoveDeadTroops();
         CheckCapture();
 
@@ -262,8 +271,11 @@ public class Platform : MonoBehaviour
 
     public void SetOwner(PlatformOwner newOwner)
     {
+        if (owner == newOwner)
+            return;
+
         owner = newOwner;
-        UpdateVisuals();
+        UpdatePlatformVisual();
     }
 
     public void ReceiveTroop(UnitController troop)
@@ -275,17 +287,53 @@ public class Platform : MonoBehaviour
         UpdateTroopCounter();
     }
 
-    private void UpdateVisuals()
+    private void UpdatePlatformVisual()
     {
-        if (platformRenderer == null)
+        if (currentPlatformVisual != null)
+            Destroy(currentPlatformVisual);
+
+        GameObject platformPrefab = GetPlatformPrefab();
+
+        if (platformPrefab == null)
+        {
+            Debug.LogWarning(
+                name + ": No platform visual prefab is assigned for " +
+                owner + ".",
+                this
+            );
             return;
+        }
 
-        Color ownerColor = neutralColor;
-        if (owner == PlatformOwner.Player) ownerColor = playerColor;
-        else if (owner == PlatformOwner.AI) ownerColor = aiColor;
+        currentPlatformVisual = Instantiate(
+            platformPrefab,
+            transform.position,
+            transform.rotation,
+            transform
+        );
+        currentPlatformVisual.transform.localPosition = Vector3.zero;
+        currentPlatformVisual.transform.localRotation = Quaternion.identity;
+        currentPlatformVisual.transform.localScale = Vector3.one;
+    }
 
-        platformRenderer.material.color =
-            isSelected ? selectedColor : ownerColor;
+    private GameObject GetPlatformPrefab()
+    {
+        switch (owner)
+        {
+            case PlatformOwner.Player:
+                return playerPlatformPrefab;
+
+            case PlatformOwner.AI:
+                return aiPlatformPrefab;
+
+            default:
+                return neutralPlatformPrefab;
+        }
+    }
+
+    private void UpdateSelectionHighlight()
+    {
+        if (selectionHighlight != null)
+            selectionHighlight.SetActive(isSelected);
     }
 
     private void UpdateTroopCounter()

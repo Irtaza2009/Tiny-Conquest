@@ -35,7 +35,7 @@ public abstract class UnitController : MonoBehaviour
     public float CurrentHealth => currentHealth;
     public bool IsDead => isDead;
 
-    private readonly Color neutralColor = Color.grey;
+    private readonly Color neutralColor = Color.yellowNice;
     private readonly Color playerColor = new Color(0.44f, 0.76f, 0.9f);
     private readonly Color aiColor = new Color(1f, 0.51f, 0.51f);
 
