@@ -9,7 +9,7 @@ public class ArrowProjectile : MonoBehaviour
 
     private void Awake()
     {
-        Collider myCollider =  GetComponent<Collider>();
+        Collider myCollider = GetComponent<Collider>();
 
         ArrowProjectile[] arrows =
             FindObjectsByType<ArrowProjectile>(FindObjectsSortMode.None);
@@ -42,23 +42,20 @@ public class ArrowProjectile : MonoBehaviour
     Destroy(gameObject, 5f);
 }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Arrow collided with: " + collision.gameObject.name);
+        UnitController unit =
+            other.GetComponentInParent<UnitController>();
 
-        SwordsmanController swordsman =
-            collision.collider.GetComponentInParent<SwordsmanController>();
+        if (unit != null && unit.TeamID != teamID)
+        {
+            unit.TakeDamage(damage);
+            Destroy(gameObject);
+            return;
+        }
 
-        ArcherController archer =
-            collision.collider.GetComponentInParent<ArcherController>();
-
-        if (swordsman != null && swordsman.TeamID != teamID)
-            swordsman.TakeDamage(damage);
-
-        if (archer != null && archer.TeamID != teamID)
-            archer.TakeDamage(damage);
-
-        Destroy(gameObject);
+        if (unit == null)
+            Destroy(gameObject);
     }
 
 }

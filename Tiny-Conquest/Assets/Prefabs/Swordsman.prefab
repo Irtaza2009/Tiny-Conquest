@@ -158,10 +158,10 @@ MonoBehaviour:
   teamID: 1
   maxHealth: 100
   moveSpeed: 3
+  detectionRadius: 4
+  waypointTolerance: 0.6
+  waypoints: []
+  unitRenderer: {fileID: 9187378693697985488}
   damage: 20
   attackRange: 1.2
   attackCooldown: 1
-  detectionRadius: 4
-  waypointTolerance: 0.4
-  waypoints: []
-  unitRenderer: {fileID: 9187378693697985488}
