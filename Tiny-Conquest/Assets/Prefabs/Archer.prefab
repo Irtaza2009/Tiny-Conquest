@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -12.02, y: 2.2, z: 1.89}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -158,12 +158,12 @@ MonoBehaviour:
   teamID: 1
   maxHealth: 100
   moveSpeed: 3
-  detectionRadius: 10
+  detectionRadius: 5
   waypointTolerance: 0.6
   waypoints: []
   unitRenderer: {fileID: 4108895385704171971}
   damage: 15
-  attackRange: 7
+  attackRange: 3.5
   minimumRange: 2
   attackCooldown: 2
   arrowPrefab: {fileID: 748974589930076412, guid: e35b10fb8da534759827fc6cfe7480dd, type: 3}
