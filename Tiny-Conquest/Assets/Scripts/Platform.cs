@@ -12,11 +12,11 @@ public enum PlatformOwner
 public class Platform : MonoBehaviour
 {
     [Header("Ownership")]
-    [SerializeField] private PlatformOwner owner =
-        PlatformOwner.Neutral;
+    [SerializeField] private PlatformOwner owner = PlatformOwner.Neutral;
 
     [Header("Troop Production")]
     [SerializeField] private SwordsmanController swordsmanPrefab;
+    [SerializeField] private ArcherController archerPrefab;
     [SerializeField] private int maxTroops = 5;
     [SerializeField] private int startingTroops = 2;
     [SerializeField] private float productionInterval = 3f;
@@ -29,14 +29,15 @@ public class Platform : MonoBehaviour
     [Header("Visuals")]
     [SerializeField] private Renderer platformRenderer;
     [SerializeField] private TMP_Text troopCountLabel;
-    public bool isSelected = false;
+    public bool isSelected;
 
     [Header("Layers")]
     [SerializeField] private string neutralLayer = "NeutralUnits";
     [SerializeField] private string playerLayer = "PlayerUnits";
     [SerializeField] private string aiLayer = "EnemyUnits";
 
-    private readonly List<SwordsmanController> stationedTroops = new List<SwordsmanController>();
+    private readonly List<UnitController> stationedTroops =
+        new List<UnitController>();
 
     private float productionTimer;
 
@@ -51,10 +52,7 @@ public class Platform : MonoBehaviour
 
     private void Start()
     {
-        startingTroops = Mathf.Clamp(
-            startingTroops, 0, maxTroops
-        );
-
+        startingTroops = Mathf.Clamp(startingTroops, 0, maxTroops);
         UpdateVisuals();
 
         for (int i = 0; i < startingTroops; i++)
@@ -66,18 +64,11 @@ public class Platform : MonoBehaviour
     private void Update()
     {
         UpdateVisuals();
-
         RemoveDeadTroops();
-
         CheckCapture();
 
-        if (owner == PlatformOwner.Neutral)
+        if (owner == PlatformOwner.Neutral || IsContested())
             return;
-
-        if (isContested())
-        {
-            return;
-        }
 
         if (stationedTroops.Count >= maxTroops)
         {
@@ -96,9 +87,17 @@ public class Platform : MonoBehaviour
 
     private void SpawnTroop()
     {
-        if (stationedTroops.Count >= maxTroops ||
-            swordsmanPrefab == null)
+        if (stationedTroops.Count >= maxTroops)
+            return;
+
+        UnitController prefab = ChooseUnitPrefab();
+
+        if (prefab == null)
         {
+            Debug.LogError(
+                name + ": Assign a swordsman or archer prefab to Platform.",
+                this
+            );
             return;
         }
 
@@ -106,48 +105,49 @@ public class Platform : MonoBehaviour
             ? spawnPoint.position
             : transform.position + Vector3.up * spawnHeightOffset;
 
-        // arranging soldiers in centered rows, radius not working... whahawhahwhah
         int index = stationedTroops.Count;
         int columns = Mathf.Min(3, maxTroops);
-        int totalRows = Mathf.CeilToInt(
-            (float)maxTroops / columns
-        );
-
+        int totalRows = Mathf.CeilToInt((float)maxTroops / columns);
         int row = index / columns;
         int column = index % columns;
-
         int troopsInThisRow = Mathf.Min(
             columns,
             maxTroops - row * columns
         );
 
         float xOffset =
-            (column - (troopsInThisRow - 1) * 0.5f)
-            * spawnSpacing;
-
+            (column - (troopsInThisRow - 1) * 0.5f) * spawnSpacing;
         float zOffset =
-            ((totalRows - 1) * 0.5f - row)
-            * spawnSpacing;
+            ((totalRows - 1) * 0.5f - row) * spawnSpacing;
 
-        Vector3 spawnPosition = basePosition +
-            new Vector3(xOffset, 0f, zOffset);
-
-        SwordsmanController troop = Instantiate(
-            swordsmanPrefab,
-            spawnPosition,
+        UnitController troop = Instantiate(
+            prefab,
+            basePosition + new Vector3(xOffset, 0f, zOffset),
             Quaternion.identity
         );
 
         troop.SetTeam(GetTeamID());
-
-        SetLayerRecursively(
-            troop.gameObject,
-            GetUnitLayer()
-        );
-
+        SetLayerRecursively(troop.gameObject, GetUnitLayer());
         stationedTroops.Add(troop);
-
         UpdateTroopCounter();
+    }
+
+    private UnitController ChooseUnitPrefab()
+    {
+        bool spawnSwordsman = Random.Range(0, 5) < 3;
+
+        if (spawnSwordsman)
+            return swordsmanPrefab;
+
+        if (archerPrefab != null)
+            return archerPrefab;
+
+        Debug.LogWarning(
+            name + ": Archer was selected but no archer prefab is assigned. " +
+            "Falling back to swordsman.",
+            this
+        );
+        return swordsmanPrefab;
     }
 
     private void CheckCapture()
@@ -156,70 +156,41 @@ public class Platform : MonoBehaviour
         bool hasAI = false;
         bool hasNeutral = false;
 
-        foreach (SwordsmanController troop in stationedTroops)
+        foreach (UnitController troop in stationedTroops)
         {
             if (troop == null || troop.IsDead)
                 continue;
-            
-            switch (troop.TeamID)
-            {
-                case 0:
-                    hasNeutral = true;
-                    break;
-                
-                case 1:
-                    hasPlayer = true;
-                    break;
 
-                case 2:
-                    hasAI = true;
-                    break;
-            }
+            if (troop.TeamID == 0) hasNeutral = true;
+            else if (troop.TeamID == 1) hasPlayer = true;
+            else if (troop.TeamID == 2) hasAI = true;
         }
 
         if (hasPlayer && !hasAI && !hasNeutral)
-        {
             SetOwner(PlatformOwner.Player);
-        }
         else if (!hasPlayer && hasAI && !hasNeutral)
-        {
             SetOwner(PlatformOwner.AI);
-        }
         else if (!hasPlayer && !hasAI && hasNeutral)
-        {
             SetOwner(PlatformOwner.Neutral);
-        }
     }
 
-    private bool isContested()
+    private bool IsContested()
     {
         bool hasPlayer = false;
         bool hasAI = false;
         bool hasNeutral = false;
 
-        foreach (SwordsmanController troop in stationedTroops)
+        foreach (UnitController troop in stationedTroops)
         {
             if (troop == null || troop.IsDead)
                 continue;
-            
-            switch (troop.TeamID)
-            {
-                case 0:
-                    hasNeutral = true;
-                    break;
-                
-                case 1:
-                    hasPlayer = true;
-                    break;
 
-                case 2:
-                    hasAI = true;
-                    break;
-            }
+            if (troop.TeamID == 0) hasNeutral = true;
+            else if (troop.TeamID == 1) hasPlayer = true;
+            else if (troop.TeamID == 2) hasAI = true;
         }
 
         int teamCount = 0;
-
         if (hasPlayer) teamCount++;
         if (hasAI) teamCount++;
         if (hasNeutral) teamCount++;
@@ -229,46 +200,29 @@ public class Platform : MonoBehaviour
 
     private int GetTeamID()
     {
-        switch (owner)
-        {
-            case PlatformOwner.Player:
-                return 1;
-
-            case PlatformOwner.AI:
-                return 2;
-
-            default:
-                return 0;
-        }
+        if (owner == PlatformOwner.Player)
+            return 1;
+        if (owner == PlatformOwner.AI)
+            return 2;
+        return 0;
     }
 
     private string GetUnitLayer()
     {
-        switch (owner)
-        {
-            case PlatformOwner.Player:
-                return playerLayer;
-
-            case PlatformOwner.AI:
-                return aiLayer;
-
-            default:
-                return neutralLayer;
-        }
+        if (owner == PlatformOwner.Player)
+            return playerLayer;
+        if (owner == PlatformOwner.AI)
+            return aiLayer;
+        return neutralLayer;
     }
 
-    private void SetLayerRecursively(
-        GameObject obj,
-        string layerName)
+    private void SetLayerRecursively(GameObject obj, string layerName)
     {
         int layer = LayerMask.NameToLayer(layerName);
 
         if (layer == -1)
         {
-            Debug.LogWarning(
-                "Layer '" + layerName + "' does not exist."
-            );
-
+            Debug.LogWarning("Layer '" + layerName + "' does not exist.", this);
             return;
         }
 
@@ -284,24 +238,18 @@ public class Platform : MonoBehaviour
         UpdateTroopCounter();
     }
 
-    public List<SwordsmanController> TakeTroops(int amount)
+    public List<UnitController> TakeTroops(int amount)
     {
         RemoveDeadTroops();
+        amount = Mathf.Clamp(amount, 0, stationedTroops.Count);
 
-        amount = Mathf.Clamp(
-            amount, 0, stationedTroops.Count
-        );
-
-        List<SwordsmanController> dispatchedTroops =
-            new List<SwordsmanController>();
+        List<UnitController> dispatchedTroops =
+            new List<UnitController>();
 
         for (int i = 0; i < amount; i++)
         {
             int lastIndex = stationedTroops.Count - 1;
-
-            SwordsmanController troop =
-                stationedTroops[lastIndex];
-
+            UnitController troop = stationedTroops[lastIndex];
             stationedTroops.RemoveAt(lastIndex);
 
             if (troop != null)
@@ -309,7 +257,6 @@ public class Platform : MonoBehaviour
         }
 
         UpdateTroopCounter();
-
         return dispatchedTroops;
     }
 
@@ -319,51 +266,31 @@ public class Platform : MonoBehaviour
         UpdateVisuals();
     }
 
+    public void ReceiveTroop(UnitController troop)
+    {
+        if (troop == null || stationedTroops.Contains(troop))
+            return;
+
+        stationedTroops.Add(troop);
+        UpdateTroopCounter();
+    }
+
     private void UpdateVisuals()
     {
+        if (platformRenderer == null)
+            return;
+
         Color ownerColor = neutralColor;
+        if (owner == PlatformOwner.Player) ownerColor = playerColor;
+        else if (owner == PlatformOwner.AI) ownerColor = aiColor;
 
-        switch (owner)
-        {
-            case PlatformOwner.Player:
-                ownerColor = playerColor;
-                break;
-
-            case PlatformOwner.AI:
-                ownerColor = aiColor;
-                break;
-        }
-
-        if (platformRenderer != null)
-        {
-            if (isSelected)
-            {
-                platformRenderer.material.color = selectedColor;
-            }
-            else
-            {
-                platformRenderer.material.color = ownerColor;
-            }
-        }
+        platformRenderer.material.color =
+            isSelected ? selectedColor : ownerColor;
     }
 
     private void UpdateTroopCounter()
     {
         if (troopCountLabel != null)
-        {
-            troopCountLabel.text =
-                stationedTroops.Count + "/" + maxTroops;
-        }
-    }
-
-    public void ReceiveTroop(SwordsmanController troop)
-    {
-        if (troop == null || stationedTroops.Contains(troop))
-        {
-            return;
-        }
-
-        stationedTroops.Add(troop);
-        UpdateTroopCounter();
+            troopCountLabel.text = stationedTroops.Count + "/" + maxTroops;
     }
 }

@@ -16,7 +16,9 @@ public class ArmyManager : MonoBehaviour
         }
 
         Instance = this;
-        connections = FindObjectsByType<PathConnection>(FindObjectsSortMode.None);
+        connections = FindObjectsByType<PathConnection>(
+            FindObjectsSortMode.None
+        );
     }
 
     public bool SendTroops(
@@ -24,43 +26,35 @@ public class ArmyManager : MonoBehaviour
         Platform destination,
         int amount)
     {
-        if (source == null || destination == null)
+        if (source == null ||
+            destination == null ||
+            source == destination ||
+            amount <= 0 ||
+            source.Owner == PlatformOwner.Neutral)
+        {
             return false;
+        }
 
-        if (source == destination || amount <= 0)
-            return false;
-
-        if (source.Owner == PlatformOwner.Neutral)
-            return false;
-
-        PathConnection connection = null;
         Transform[] route = null;
 
         foreach (PathConnection candidate in connections)
         {
-            if (candidate.TryGetRoute(
-                source,
-                destination,
-                out route))
-            {
-                connection = candidate;
+            if (candidate.TryGetRoute(source, destination, out route))
                 break;
-            }
         }
 
-        if (connection == null || route == null)
+        if (route == null || route.Length == 0)
         {
             Debug.Log("These platforms are not connected.");
             return false;
         }
 
-        List<SwordsmanController> troops =
-            source.TakeTroops(amount);
+        List<UnitController> troops = source.TakeTroops(amount);
 
         if (troops.Count == 0)
             return false;
 
-        foreach (SwordsmanController troop in troops)
+        foreach (UnitController troop in troops)
         {
             if (troop != null)
                 troop.SetRoute(route, destination);
