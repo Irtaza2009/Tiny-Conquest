@@ -37,14 +37,14 @@ public class ArcherController : UnitController
 
         if (distance > attackRange)
         {
-            UnitRigidbody.MovePosition(
+            MoveWithinPath(
                 UnitRigidbody.position +
                 direction.normalized * MoveSpeed * Time.fixedDeltaTime
             );
         }
         else if (distance < minimumRange)
         {
-            UnitRigidbody.MovePosition(
+            MoveWithinPath(
                 UnitRigidbody.position -
                 direction.normalized * MoveSpeed * Time.fixedDeltaTime
             );
@@ -72,8 +72,13 @@ public class ArcherController : UnitController
             return;
         }
 
-        Vector3 targetPosition =
-            CurrentTarget.transform.position + Vector3.up * 0.8f;
+        Vector3 targetPosition = CurrentTarget.AimPosition;
+        float travelTime =
+            Vector3.Distance(shootPoint.position, targetPosition) /
+            Mathf.Max(arrowSpeed, 0.01f);
+
+        targetPosition += CurrentTarget.Velocity * travelTime;
+
         Vector3 direction =
             (targetPosition - shootPoint.position).normalized;
 
@@ -92,6 +97,9 @@ public class ArcherController : UnitController
             return;
         }
 
+        arrowRigidbody.useGravity = false;
+        arrowRigidbody.collisionDetectionMode =
+            CollisionDetectionMode.ContinuousDynamic;
         arrowRigidbody.linearVelocity = direction * arrowSpeed;
 
         ArrowProjectile projectile =

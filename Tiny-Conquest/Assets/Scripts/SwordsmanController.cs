@@ -31,7 +31,7 @@ public class SwordsmanController : UnitController
 
         if (distance > attackRange)
         {
-            UnitRigidbody.MovePosition(
+            MoveWithinPath(
                 UnitRigidbody.position +
                 direction.normalized * MoveSpeed * Time.fixedDeltaTime
             );

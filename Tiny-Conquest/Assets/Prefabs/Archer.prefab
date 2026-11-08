@@ -160,6 +160,8 @@ MonoBehaviour:
   moveSpeed: 3
   detectionRadius: 5
   waypointTolerance: 0.6
+  pathHalfWidth: 1.25
+  pathEdgeBuffer: 0.2
   waypoints: []
   unitRenderer: {fileID: 4108895385704171971}
   damage: 15

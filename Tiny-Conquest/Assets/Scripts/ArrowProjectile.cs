@@ -6,10 +6,19 @@ public class ArrowProjectile : MonoBehaviour
     private int teamID;
 
     private Collider shooterCollider;
+    private UnitController shooterUnit;
 
     private void Awake()
     {
         Collider myCollider = GetComponent<Collider>();
+
+        if (myCollider == null)
+        {
+            Debug.LogError(name + ": Arrow requires a Collider.", this);
+            return;
+        }
+
+        myCollider.isTrigger = true;
 
         ArrowProjectile[] arrows =
             FindObjectsByType<ArrowProjectile>(FindObjectsSortMode.None);
@@ -27,35 +36,34 @@ public class ArrowProjectile : MonoBehaviour
     }
 
     public void Initialize(float arrowDamage, int shooterTeam, Collider shooter)
-{
-    damage = arrowDamage;
-    teamID = shooterTeam;
-    shooterCollider = shooter;
-
-    Collider arrowCollider = GetComponent<Collider>();
-
-    if (arrowCollider != null && shooterCollider != null)
     {
-        Physics.IgnoreCollision(arrowCollider, shooterCollider);
-    }
+        damage = arrowDamage;
+        teamID = shooterTeam;
+        shooterCollider = shooter;
+        shooterUnit = shooter != null
+            ? shooter.GetComponentInParent<UnitController>()
+            : null;
 
-    Destroy(gameObject, 5f);
-}
+        Collider arrowCollider = GetComponent<Collider>();
+
+        if (arrowCollider != null && shooterCollider != null)
+            Physics.IgnoreCollision(arrowCollider, shooterCollider);
+
+        Destroy(gameObject, 2f);
+    }
 
     private void OnTriggerEnter(Collider other)
     {
         UnitController unit =
             other.GetComponentInParent<UnitController>();
 
-        if (unit != null && unit.TeamID != teamID)
-        {
-            unit.TakeDamage(damage);
-            Destroy(gameObject);
+        if (other == shooterCollider || unit == shooterUnit)
             return;
-        }
 
-        if (unit == null)
-            Destroy(gameObject);
+        if (unit != null && unit.TeamID != teamID)
+            unit.TakeDamage(damage);
+
+        Destroy(gameObject);
     }
 
 }
