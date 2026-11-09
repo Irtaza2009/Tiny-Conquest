@@ -328,8 +328,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   owner: 1
-  swordsmanPrefab: {fileID: 5747589936257419068, guid: 737e97acdbea4ee45ac336ff1ecd7f86, type: 3}
-  archerPrefab: {fileID: 7347793777896350449, guid: 06b9c7271c1be7b4dadbd937fa02b55f, type: 3}
+  swordsmanPrefab: {fileID: 107678165264445765, guid: 6e9f3ebefd88b47e09b914826e8e5f39, type: 3}
+  archerPrefab: {fileID: 1512797890108534272, guid: 4f7bdf97a366d42cfbdbdd2a334c20f6, type: 3}
   maxTroops: 5
   startingTroops: 2
   productionInterval: 3
@@ -3936,8 +3936,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   owner: 2
-  swordsmanPrefab: {fileID: 5747589936257419068, guid: 737e97acdbea4ee45ac336ff1ecd7f86, type: 3}
-  archerPrefab: {fileID: 7347793777896350449, guid: 06b9c7271c1be7b4dadbd937fa02b55f, type: 3}
+  swordsmanPrefab: {fileID: 107678165264445765, guid: 6e9f3ebefd88b47e09b914826e8e5f39, type: 3}
+  archerPrefab: {fileID: 1512797890108534272, guid: 4f7bdf97a366d42cfbdbdd2a334c20f6, type: 3}
   maxTroops: 5
   startingTroops: 2
   productionInterval: 3
@@ -4450,8 +4450,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   owner: 0
-  swordsmanPrefab: {fileID: 5747589936257419068, guid: 737e97acdbea4ee45ac336ff1ecd7f86, type: 3}
-  archerPrefab: {fileID: 7347793777896350449, guid: 06b9c7271c1be7b4dadbd937fa02b55f, type: 3}
+  swordsmanPrefab: {fileID: 107678165264445765, guid: 6e9f3ebefd88b47e09b914826e8e5f39, type: 3}
+  archerPrefab: {fileID: 1512797890108534272, guid: 4f7bdf97a366d42cfbdbdd2a334c20f6, type: 3}
   maxTroops: 5
   startingTroops: 3
   productionInterval: 3
