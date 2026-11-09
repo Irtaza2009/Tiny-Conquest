@@ -32,6 +32,7 @@ Each tower regenerates troops at a rate of 1 troop / 3 seconds.
 A troop can randomly be a swordsman or an archer.
 
 We had also made custom 3D models for troops, but weren't able to add them into the game due to time limitations :(
+(Update: Just added them even though the time didn't count for them because the project was already shipped)
 
 ## Credits
 
