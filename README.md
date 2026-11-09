@@ -8,7 +8,7 @@ Capture castles, train troops, battle, and conquer the map!
 
 ## Demo Video
 
-[Demo Video]()
+[Demo Video](https://github.com/user-attachments/assets/75e7039b-9ba0-458d-8f03-ddbfd612e140)
 
 ## Demo Images
 
@@ -31,7 +31,7 @@ Each tower regenerates troops at a rate of 1 troop / 3 seconds.
 
 A troop can randomly be a swordsman or an archer.
 
-We had also made customs 3D models for troops, but weren't able to add them into the game due to time limitations :(
+We had also made custom 3D models for troops, but weren't able to add them into the game due to time limitations :(
 
 ## Credits
 
